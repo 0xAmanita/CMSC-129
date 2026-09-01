@@ -68,10 +68,14 @@ class ExpressionEvaluatorGUI:
         """Load a .in file into the input area, replacing current content."""
         file_path = filedialog.askopenfilename(
             title="Select input file",
-            filetypes=[("Input files", "*.in"), ("All files", "*.*")],
+            filetypes=[("Input files", "*.in")],
         )
         if not file_path:
             return  # user cancelled
+
+        if not file_path.lower().endswith(".in"):
+            messagebox.showerror("Invalid file", "Please select a file with a .in extension.")
+            return
 
         try:
             with open(file_path, "r") as f:
@@ -94,8 +98,8 @@ class ExpressionEvaluatorGUI:
 
         lines = [ln for ln in raw_input.splitlines() if ln.strip() != ""]
 
-        entries, variables_used, errors = process_lines(lines)
-        output_str = build_output_text(entries, variables_used, errors)
+        entries, variables_used, errors, variables = process_lines(lines)
+        output_str = build_output_text(entries, variables_used, errors, variables)
 
         # Overwrite the output area.
         self.output_text.config(state=tk.NORMAL)
