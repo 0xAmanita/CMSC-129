@@ -13,9 +13,16 @@ def format_number(value):
     return str(value)
 
 
-# evaluates a postfix token list against known variables
+# evaluates a postfix token list against the symbol table (`variables`).
+# Assignments overwrite `variables` in place, so a lookup here always sees
+# each variable's most recently assigned value.
+#
+# Returns (result, error, used_vars): `used_vars` lists every variable
+# successfully read from the symbol table while evaluating, in first-seen
+# order, so the caller can fold it into the "variables used" output list.
 def evaluate_postfix(tokens, variables):
     stack = []
+    used_vars = []
     for token in tokens:
         kind = classify_token(token)
 
@@ -23,11 +30,13 @@ def evaluate_postfix(tokens, variables):
             stack.append(_to_number(token))
         elif kind == "identifier":
             if token not in variables:
-                return None, f"undefined variable '{token}'"
+                return None, f"undefined variable '{token}'", used_vars
+            if token not in used_vars:
+                used_vars.append(token)
             stack.append(variables[token])
         else:
             if len(stack) < 2:
-                return None, "malformed expression"
+                return None, "malformed expression", used_vars
             b = stack.pop()
             a = stack.pop()
             try:
@@ -44,8 +53,8 @@ def evaluate_postfix(tokens, variables):
                 elif token == "^":
                     stack.append(a ** b)
             except ZeroDivisionError:
-                return None, "division by zero"
+                return None, "division by zero", used_vars
 
     if len(stack) != 1:
-        return None, "malformed expression"
-    return stack[0], None
+        return None, "malformed expression", used_vars
+    return stack[0], None, used_vars

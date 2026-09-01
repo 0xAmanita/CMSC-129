@@ -105,6 +105,9 @@ class ExpressionEvaluatorGUI:
             entry = evaluate_line(line, i, variables)
             entries.append(entry)
 
+            for used in entry.get("used_vars", []):
+                if used not in variables_used:
+                    variables_used.append(used)
             if entry.get("var_name") and entry["var_name"] not in variables_used:
                 variables_used.append(entry["var_name"])
             if entry.get("error"):
@@ -160,18 +163,22 @@ def evaluate_line(line, index, variables):
             "postfix": INVALID_MESSAGE,
             "result_line": INVALID_MESSAGE,
             "var_name": None,
+            "used_vars": [],
             "error": f"Line {index}: {parsed.error}",
         }
 
     postfix = infix_to_postfix(parsed.expression)
-    value, error = evaluate_postfix(postfix, variables)
+    value, error, used_vars = evaluate_postfix(postfix, variables)
 
     if error:
+        # Leave the symbol table untouched: a statement like `x = 1 / 0`
+        # keeps x's previous value (or stays undefined if it never had one).
         return {
             "line": parsed.raw.strip(),
             "postfix": " ".join(postfix),
             "result_line": "error",
             "var_name": None,
+            "used_vars": used_vars,
             "error": f"Line {index}: {error}",
         }
 
@@ -188,6 +195,7 @@ def evaluate_line(line, index, variables):
         "postfix": " ".join(postfix),
         "result_line": result_line,
         "var_name": var_name,
+        "used_vars": used_vars,
         "error": None,
     }
 
