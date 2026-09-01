@@ -1,13 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 
-from line_parser import (
-    INVALID_MESSAGE,
-    evaluate_postfix,
-    format_number,
-    infix_to_postfix,
-    parse_line,
-)
+from evaluator import evaluate_postfix, format_number
+from line_parser import INVALID_MESSAGE, parse_line
+from postfix_converter import infix_to_postfix
 
 
 class ExpressionEvaluatorGUI:
