@@ -3,7 +3,7 @@ from line_parser import INVALID_MESSAGE, parse_line
 from postfix_converter import infix_to_postfix
 
 
-def evaluate_line(line, index, variables):
+def evaluate_line(line, variables):
     """Parse, convert, and evaluate one line; updates variables in place."""
     parsed = parse_line(line)
 
@@ -14,7 +14,7 @@ def evaluate_line(line, index, variables):
             "result_line": INVALID_MESSAGE,
             "var_name": None,
             "used_vars": [],
-            "error": f"Line {index}: {parsed.error}",
+            "error": parsed.error,
         }
 
     postfix = infix_to_postfix(parsed.expression)
@@ -29,7 +29,7 @@ def evaluate_line(line, index, variables):
             "result_line": "error",
             "var_name": None,
             "used_vars": used_vars,
-            "error": f"Line {index}: {error}",
+            "error": error,
         }
 
     if parsed.kind == "statement":
@@ -57,8 +57,8 @@ def process_lines(lines):
     errors = []
     variables = {}
 
-    for i, line in enumerate(lines, start=1):
-        entry = evaluate_line(line, i, variables)
+    for line in lines:
+        entry = evaluate_line(line, variables)
         entries.append(entry)
 
         for used in entry.get("used_vars", []):
@@ -69,10 +69,10 @@ def process_lines(lines):
         if entry.get("error"):
             errors.append(entry["error"])
 
-    return entries, variables_used, errors
+    return entries, variables_used, errors, variables
 
 
-def build_output_text(entries, variables_used, errors):
+def build_output_text(entries, variables_used, errors, variables):
     """Format the results the way the spec's mockup shows."""
     blocks = []
     for entry in entries:
@@ -89,7 +89,9 @@ def build_output_text(entries, variables_used, errors):
     output += f"\n\n{separator}\n"
     output += "Variables used:\n"
     if variables_used:
-        output += "\n".join(variables_used) + "\n"
+        output += "\n".join(
+            f"{name} = {format_number(variables[name])}" for name in variables_used
+        ) + "\n"
     else:
         output += "(none)\n"
 
