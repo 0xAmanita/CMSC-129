@@ -1,6 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 
+from line_parser import (
+    INVALID_MESSAGE,
+    evaluate_postfix,
+    format_number,
+    infix_to_postfix,
+    parse_line,
+)
+
 
 class ExpressionEvaluatorGUI:
     def __init__(self, root):
@@ -95,9 +103,10 @@ class ExpressionEvaluatorGUI:
         entries = []
         variables_used = []
         errors = []
+        variables = {}
 
         for i, line in enumerate(lines, start=1):
-            entry = mock_evaluate_line(line, i)  # placeholder, swap for real engine
+            entry = evaluate_line(line, i, variables)
             entries.append(entry)
 
             if entry.get("var_name") and entry["var_name"] not in variables_used:
@@ -145,34 +154,46 @@ def build_output_text(entries, variables_used, errors):
     return output
 
 
-def mock_evaluate_line(line, index):
-    """Temporary stand-in until the real evaluator is implemented.
+def evaluate_line(line, index, variables):
+    """Parse, convert, and evaluate one line; updates variables in place."""
+    parsed = parse_line(line)
 
-    Returns data shaped like the real engine's output so the UI can be
-    tested before item 5 is done.
-    """
-    stripped = line.strip()
+    if parsed.kind == "invalid":
+        return {
+            "line": parsed.raw.strip(),
+            "postfix": INVALID_MESSAGE,
+            "result_line": INVALID_MESSAGE,
+            "var_name": None,
+            "error": f"Line {index}: {parsed.error}",
+        }
 
-    # Rough variable-name guess, just for the demo.
-    var_name = None
-    if "=" in stripped:
-        possible_var = stripped.split("=")[0].strip()
-        if possible_var.isidentifier():
-            var_name = possible_var
+    postfix = infix_to_postfix(parsed.expression)
+    value, error = evaluate_postfix(postfix, variables)
 
-    entry = {
-        "line": stripped,
-        "postfix": f"postfix{index}",
-        "result_line": f"result{index}" if not var_name else f"{var_name} = result{index}",
+    if error:
+        return {
+            "line": parsed.raw.strip(),
+            "postfix": " ".join(postfix),
+            "result_line": "error",
+            "var_name": None,
+            "error": f"Line {index}: {error}",
+        }
+
+    if parsed.kind == "statement":
+        variables[parsed.var_name] = value
+        result_line = f"{parsed.var_name} = {format_number(value)}"
+        var_name = parsed.var_name
+    else:
+        result_line = format_number(value)
+        var_name = None
+
+    return {
+        "line": parsed.raw.strip(),
+        "postfix": " ".join(postfix),
+        "result_line": result_line,
         "var_name": var_name,
         "error": None,
     }
-
-    # Fake one error so the Errors section has something to show.
-    if index == 2:
-        entry["error"] = f"Undefined variable {var_name or 'Var2'}"
-
-    return entry
 
 
 def main():
