@@ -4,15 +4,7 @@ from typing import Optional
 
 INVALID_MESSAGE = "Invalid input code."
 
-C_KEYWORDS = {
-    "auto", "break", "case", "char", "const", "continue", "default", "do",
-    "double", "else", "enum", "extern", "float", "for", "goto", "if",
-    "int", "long", "register", "return", "short", "signed", "sizeof",
-    "static", "struct", "switch", "typedef", "union", "unsigned", "void",
-    "volatile", "while",
-}
-
-_OPERATORS = set("+-*/%^")
+_OPERATORS = set("+-*/%")
 
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9]*$")
 _NUMBER_RE = re.compile(r"^\d+(\.\d+)?$")
@@ -24,7 +16,7 @@ _TOKEN_RE = re.compile(
     | \d+\.\d+
     | \d+
     | [A-Za-z][A-Za-z0-9_]*
-    | [+\-*/%^()]
+    | [+\-*/%()]
     """,
     re.VERBOSE,
 )
@@ -39,15 +31,11 @@ class ParsedLine:
     error: Optional[str] = None
 
 
-# C rules, minus underscores, and no reserved keywords
+# C rules, minus underscores; keywords are allowed as names here
 def is_valid_variable_name(name):
     if not name:
         return False
-    if not _IDENTIFIER_RE.match(name):
-        return False
-    if name in C_KEYWORDS:
-        return False
-    return True
+    return bool(_IDENTIFIER_RE.match(name))
 
 
 # splits expression into tokens: None means an illegal character was found

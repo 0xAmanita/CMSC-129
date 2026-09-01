@@ -1,7 +1,6 @@
 from line_parser import classify_token, tokenize
 
-_PRECEDENCE = {"+": 1, "-": 1, "*": 2, "/": 2, "%": 2, "^": 3}
-_RIGHT_ASSOC = {"^"}
+_PRECEDENCE = {"+": 1, "-": 1, "*": 2, "/": 2, "%": 2}
 
 
 # grabs the single token or the whole (...) group starting at tokens[i]
@@ -72,10 +71,7 @@ def infix_to_postfix(expression):
             while (
                 op_stack
                 and op_stack[-1] != "("
-                and (
-                    _PRECEDENCE[op_stack[-1]] > _PRECEDENCE[token]
-                    or (_PRECEDENCE[op_stack[-1]] == _PRECEDENCE[token] and token not in _RIGHT_ASSOC)
-                )
+                and _PRECEDENCE[op_stack[-1]] >= _PRECEDENCE[token]
             ):
                 output.append(op_stack.pop())
             op_stack.append(token)

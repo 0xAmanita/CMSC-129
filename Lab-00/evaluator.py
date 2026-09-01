@@ -30,13 +30,13 @@ def evaluate_postfix(tokens, variables):
             stack.append(_to_number(token))
         elif kind == "identifier":
             if token not in variables:
-                return None, f"undefined variable '{token}'", used_vars
+                return None, f"Undefined variable {token}", used_vars
             if token not in used_vars:
                 used_vars.append(token)
             stack.append(variables[token])
         else:
             if len(stack) < 2:
-                return None, "malformed expression", used_vars
+                return None, "Malformed expression", used_vars
             b = stack.pop()
             a = stack.pop()
             try:
@@ -50,11 +50,9 @@ def evaluate_postfix(tokens, variables):
                     stack.append(a / b)
                 elif token == "%":
                     stack.append(a % b)
-                elif token == "^":
-                    stack.append(a ** b)
             except ZeroDivisionError:
-                return None, "division by zero", used_vars
+                return None, "Division by zero", used_vars
 
     if len(stack) != 1:
-        return None, "malformed expression", used_vars
+        return None, "Malformed expression", used_vars
     return stack[0], None, used_vars
