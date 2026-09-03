@@ -89,14 +89,16 @@ class ExpressionEvaluatorGUI:
 
     def process_input(self):
         """Run each input line through the evaluator and show the results."""
-        raw_input = self.input_text.get("1.0", tk.END)
+        # end-1c, tk tacks on an extra newline that's not really there
+        raw_input = self.input_text.get("1.0", "end-1c")
 
         # Just in case; normally Process is disabled when the input is empty.
         if raw_input.strip() == "":
             messagebox.showinfo("Nothing to process", "Input area is empty.")
             return
 
-        lines = [ln for ln in raw_input.splitlines() if ln.strip() != ""]
+        # keep blanks, they still count as a line (just an invalid one)
+        lines = raw_input.splitlines()
 
         entries, variables_used, errors, variables = process_lines(lines)
         output_str = build_output_text(entries, variables_used, errors, variables)
